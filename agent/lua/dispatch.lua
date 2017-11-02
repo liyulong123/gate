@@ -1,7 +1,15 @@
+--
+-- Created by IntelliJ IDEA.
+-- User: liyulong
+-- Date: 2017/11/2
+-- Time: 9:55
+-- To change this template use File | Settings | File Templates.
+--
+
 
 local cjson = require("cjson.safe")
 
-local function rewrite()
+local function run()
     local match = ngx.re.match(ngx.var.uri,[[^/([^/]+)/(.+)$]])
     if not match then
         ngx.log(ngx.ERR,cjson.encode(match)," ",ngx.var.uri)
@@ -9,7 +17,8 @@ local function rewrite()
     end
     local host = match[1]
     local path = match[2]
-    ngx.location.capture()
+    local uri = ngx.var.scheme .. "://".. host .. "/" .. path
+    ngx.exec(uri)
 end
 
-rewrite()
+run()
