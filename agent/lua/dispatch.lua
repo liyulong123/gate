@@ -18,6 +18,7 @@ local function run()
     local host = match[1]
     local path = match[2]
     local uri = ngx.var.scheme .. "://".. host .. "/" .. path
+    ngx.log(ngx.ERR,"to url : ",uri)
     ngx.exec(uri)
 end
 
