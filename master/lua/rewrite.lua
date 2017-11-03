@@ -4,7 +4,7 @@ local function get_agent_ip()
 end
 
 local function rewrite()
-    local uri = ngx.var.scheme .. "://".. get_agent_ip() .. "/" .. ngx.req.get_headers()["Host"] .."/"..ngx.var.uri
+    local uri = ngx.var.scheme .. "://".. get_agent_ip() .. "/" .. ngx.req.get_headers()["Host"] ..ngx.var.uri
     return ngx.redirect(uri)
 end
 
