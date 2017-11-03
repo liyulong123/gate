@@ -1,6 +1,6 @@
 
 local function get_agent_ip()
-    return "47.254.20.111"
+    return "115.28.55.40"
 end
 
 local function rewrite()
