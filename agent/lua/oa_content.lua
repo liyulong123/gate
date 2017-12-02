@@ -45,31 +45,37 @@ ngx.log(ngx.ERR,"=========")
 local data, eof = ngx.arg[1], ngx.arg[2]
 if data and not eof then
 
-    data = ngx.re.gsub(data, "https://59.173.21.163:8882", "http://oa.xiaozhu.work", "i")
-    local patt = {
-        ' src[ ]{0,4}=[ ]{0,4}"([^"]+)"',
-        ' href[ ]{0,4}=[ ]{0,4}"([^"]+)"',
-        ' src=\\\\"(/com/64sys.js)\\\\"',
-        ' href[ ]{0,4}=[ ]{0,4}\\"([^"]+)\\"',
-    }
 
-    for _, pattern in pairs(patt) do
-        local list, err = ngx.re.gmatch(data, pattern)
-        if list and list ~=nil and list ~= ngx.null then
-            data = process_src_list(list, data,pattern)
-        else
-            ngx.log(ngx.ERR,"no match for : ",pattern)
-        end
-    end
+    local result = ngx.re.gsub(data, "https://59.173.21.163:8882", "http://oa.xiaozhu.work", "i")
     local spec = {
         '/com/xml2json.js',
 
     }
     for _, sp in pairs(spec) do
-        ngx.re.gsub(data,sp,"http://oa.xiaozhu.work"..sp)
+        result = ngx.re.gsub(data,sp,"http://oa.xiaozhu.work"..sp)
 
     end
+    local patt = {
+        ' src[ ]{0,4}=[^"]{0,4}"([^"]+)"',
+        ' href[ ]{0,4}=[^"]{0,4}"([^"]+)"',
+        ' src=\\\\"(/com/64sys.js)\\\\"',
+        ' href[ ]{0,4}=[ ]{0,4}\\"([^"]+)\\"',
+    }
 
-    ngx.arg[1] = data
+    for _, pattern in pairs(patt) do
+        if result == nil then
+            ngx.log(ngx.ERR," result is nil  ------------")
+            return
+        end
+        local list, err = ngx.re.gmatch(result, pattern)
+        if list and list ~=nil and list ~= ngx.null then
+            result = process_src_list(list, result,pattern)
+        else
+            ngx.log(ngx.ERR,"no match for : ",pattern)
+        end
+    end
+
+    ngx.arg[1] = result
+
 end
 
