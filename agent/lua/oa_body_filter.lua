@@ -7,7 +7,7 @@
 --
 local cjson = require("cjson.safe")
 
-local function process_src_list(src_it, data)
+local function process_src_list(src_it, data,pattern)
 
         ngx.log(ngx.ERR,"process")
 
@@ -19,20 +19,20 @@ local function process_src_list(src_it, data)
 
         local src, err = src_it()
         if err then
-            ngx.log(ngx.ERR, "error: ", err)
+            ngx.log(ngx.ERR, pattern, " error: ", err)
             return
         end
 
         if not src then
             -- no match found (any more)
-            ngx.log(ngx.ERR,"process no match")
+            ngx.log(ngx.ERR,pattern,"  process no match ")
             break
         end
         ngx.log(ngx.ERR,cjson.encode(src))
 
         local m, err = ngx.re.match(src[1], "^http")
-        if  not m and src[1] ~= "#" then
-            ngx.log(ngx.ERR,src[1])
+        if  not m and src[1] ~= "#" and src[1] ~= '{0}' then
+            ngx.log(ngx.ERR,pattern," ---- ",src[1])
             data = ngx.re.gsub(data, src[1], "http://oa.xiaozhu.work/" .. src[1])
         end
 
@@ -43,18 +43,33 @@ end
 
 ngx.log(ngx.ERR,"=========")
 local data, eof = ngx.arg[1], ngx.arg[2]
-data = ngx.re.gsub(data, "https://59.173.21.163:8882", "http://oa.xiaozhu.work", "i")
-local src_list, err = ngx.re.gmatch(data, 'src[ ]{0,4}=[ ]{0,4}\\?"([^"]+)"')
-if src_list then
-    data = process_src_list(src_list, data)
-else
-    ngx.log(ngx.ERR,"no match src")
+if data and not eof then
+
+    data = ngx.re.gsub(data, "https://59.173.21.163:8882", "http://oa.xiaozhu.work", "i")
+    local patt = {
+        ' src[ ]{0,4}=[ ]{0,4}"([^"]+)"',
+        ' href[ ]{0,4}=[ ]{0,4}"([^"]+)"',
+        ' src=\\\\"(/com/64sys.js)\\\\"',
+        ' href[ ]{0,4}=[ ]{0,4}\\"([^"]+)\\"',
+    }
+
+    for _, pattern in pairs(patt) do
+        local list, err = ngx.re.gmatch(data, pattern)
+        if list and list ~=nil and list ~= ngx.null then
+            data = process_src_list(list, data,pattern)
+        else
+            ngx.log(ngx.ERR,"no match for : ",pattern)
+        end
+    end
+    local spec = {
+        '/com/xml2json.js',
+
+    }
+    for _, sp in pairs(spec) do
+        ngx.re.gsub(data,sp,"http://oa.xiaozhu.work"..sp)
+
+    end
+
+    ngx.arg[1] = data
 end
-local href_list, err = ngx.re.gmatch(data, 'href[ ]{0,4}=[ ]{0,4}\\?"([^"]+)"')
-if href_list then
-    data = process_src_list(href_list, data)
-else
-    ngx.log(ngx.ERR,"no match href")
-end
-ngx.arg[1] = data
 
